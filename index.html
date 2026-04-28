@@ -840,7 +840,7 @@ function generateSNS() {
     { user: state.names.ai, time: "2ヶ月前", text: `本当の幸せってなんだろう。\n最近いろいろ考えちゃうな。` }, 
     { user: state.names.ai, time: "1ヶ月前", text: `刺激。環境変えたい。\n退屈な毎日はもう嫌だなー` }, 
     { user: state.names.ai, time: "数日前", text: `運命の人に会えた✨\n本当に優しくてかっこよくて最高！\n#MyHero #幸せ` }, 
-    { user: state.names.ai, time: "今日", text: `私の答え。\n新しい道に進むことに決めた。後悔はしてない。` }
+    { user: state.names.ai, time: "今日", text: `${state.aiFirstPerson || "私"}の答え。\n新しい道に進むことに決めた。後悔はしてない。` }
   ]; 
   snsFeed.innerHTML = ps.map(p => `
     <div class="sns-post">
@@ -978,7 +978,7 @@ function checkUIState() {
             {text:`${BN}様、よろしくお願いします`, next:'g_step2'}
         ]);
         else if (state.storyStep === 9) showChoices([
-            {text:"一生懸命働きます、、", next:'g_branch_accept'},
+            {text:"一生懸命働きます、、", next:'g_step4'},
             {text:`やっぱ${FP}無理だ`, next:'g_branch_refusal'}
         ]);
         else if (state.storyStep === 10) showChoices([
@@ -1020,7 +1020,8 @@ window.joinGroup = () => {
   const UN = state.names.user;
   const AN = state.names.ai;
   const BN = state.names.bf;
-  const msg = `${UN}くんこれからよろしくね〜笑\n奴隷としてのルール送ってあげるから、ちゃんと守ること。\n・${AN}と${BN}くんの命令には絶対に逆らわないこと\n・${AN}と${BN}くんのことは様付けで呼ぶこと。元カノだからといって呼び捨ては禁止ね\n・このグループLINEで呼び出されたらすぐに来ること。`;
+  const AFP = state.aiFirstPerson || "私";
+  const msg = `${UN}くんこれからよろしくね〜笑\n奴隷としてのルール送ってあげるから、ちゃんと守ること。\n・${AFP}と${BN}くんの命令には絶対に逆らわないこと\n・${AN}と${BN}くんのことは様付けで呼ぶこと。元カノだからといって呼び捨ては禁止ね\n・このグループLINEで呼び出されたらすぐに来ること。`;
   state.messages.group.push({ role:'ai', name:state.names.ai, text: msg, icon:state.aiIcon, time:t }); 
   switchRoom('group'); 
 };
@@ -1132,19 +1133,19 @@ function aiReply(stepKey) {
     else if(stepKey === 'payment_done') { res.text = `Zはありがとうだけど${UN}くんには残念な報告するね。\nちょうど今目の前で${BN}くんから告白されて、付き合うことになったんだよね〜\nだから${UN}くんは${AFP}のATM兼奴隷として使ってあげる笑\nいいよね？`; state.storyStep = 5; }
     else if(stepKey === 'step5_1') { res.text = `そだよ。${UN}くんよりイケメンでかっこいいの！`; state.storyStep = 5.1; }
     else if(stepKey === 'step5_1_1') { res.text = `で、奴隷になるの？ならないの？どっち？`; state.storyStep = 5.3; }
-    else if(stepKey === 'step5_2') { res.text = `${AN}のためにZを貢いだり、アッシーとして使われるの。幸せでしょ？`; state.storyStep = 5.3; }
+    else if(stepKey === 'step5_2') { res.text = `${AFP}のためにZを貢いだり、アッシーとして使われるの。幸せでしょ？`; state.storyStep = 5.3; }
     else if(stepKey === 'step5_heart_2') { res.text = `今決めて。断ったらもう二度と仲良くしてあげないけど。`; state.storyStep = 5.4; }
     else if(stepKey === 'step6') { res.text = "おっけー\nじゃあ、彼氏も入れた3人のグループライン作るね。"; state.storyStep = 6; }
 
     // Group
-    else if(stepKey === 'g_step1') { res.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AN}のこと幸せにしてくれるんだから笑`; state.storyStep = 8; }
+    else if(stepKey === 'g_step1') { res.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AFP}のこと幸せにしてくれるんだから笑`; state.storyStep = 8; }
     else if(stepKey === 'g_step1_alt') {
         res.text = `「かしこまりました」ね？敬語ちゃんと使いなよ笑`;
         state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
         setTimeout(() => {
             showTyping(currentRoom, () => {
                 let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
-                res2.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AN}のこと幸せにしてくれるんだから笑`;
+                res2.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AFP}のこと幸せにしてくれるんだから笑`;
                 state.storyStep = 8;
                 state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); 
                 isProcessing = false; save(); checkUIState();
@@ -1186,7 +1187,7 @@ function aiReply(stepKey) {
             state.storyStep = 11;
         }
     }
-    else if(stepKey === 'g_step4') { res.text = `さっそく${AN}たちに貢いでよ笑 ATMになったんでしょ？`; state.storyStep = 12; }
+    else if(stepKey === 'g_step4') { res.text = `さっそく${AFP}たちに貢いでよ笑 ATMになったんでしょ？`; state.storyStep = 12; }
     else if(stepKey === 'g_step5') { res.text = `5000Zでいいよ笑`; state.storyStep = 13; }
     else if(stepKey === 'g_payment_done') {
         res.text = `ありがと〜♡ だいすきだよ♡ ATMとして笑`;
@@ -1210,7 +1211,7 @@ function aiReply(stepKey) {
         }, 1500);
         return;
     }
-    else if(stepKey === 'g_step6_1') { res.text = `教えてあげるね笑 ${AN}と${BN}くんのデート代だよ笑`; state.storyStep = 15; }
+    else if(stepKey === 'g_step6_1') { res.text = `教えてあげるね笑 ${AFP}と${BN}くんのデート代だよ笑`; state.storyStep = 15; }
     else if(stepKey === 'g_step6_2') { res.text = `せいかーい笑 よくわかってんじゃん、${UN}くんの言う通りだよ笑`; state.storyStep = 15; }
     else if(stepKey === 'g_step6_3') { res.text = `知りたくないか〜笑 でもデートで使われちゃうってちゃんと受け止めないとだよ`; state.storyStep = 15; }
     else if(stepKey === 'g_step7_1') { res.text = `たくさん悔しがりな笑`; state.storyStep = 16; }
