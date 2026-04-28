@@ -302,6 +302,20 @@
   </div>
 </div>
 
+<div id="story-code-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <h3 class="modal-title">ストーリーコード入力</h3>
+    <p style="font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">エピソード1を開始するには専用のストーリーコードが必要です。</p>
+    <div class="input-group" style="margin-bottom: 15px;">
+      <input type="text" id="story-code-input" placeholder="コードを入力" style="width: 100%; text-transform: uppercase;">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button class="primary-btn" onclick="verifyStoryCode()">認証して進む</button>
+      <button class="primary-btn" style="background: #444;" onclick="closeStoryCodeModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <div id="play-mode-modal" class="modal-overlay" style="display: none;">
   <div class="modal-card">
     <h3 class="modal-title">エピソード1: 地獄の始まり</h3>
@@ -444,8 +458,12 @@ function escapeHTML(str) {
 
 const setupScreen = document.getElementById("setup-screen"), episodeScreen = document.getElementById("episode-screen"), playModeModal = document.getElementById("play-mode-modal");
 const restartOptionModal = document.getElementById("restart-option-modal");
+const storyCodeModal = document.getElementById("story-code-modal"), storyCodeInput = document.getElementById("story-code-input");
 const snsScreen = document.getElementById("sns-screen"), snsFeed = document.getElementById("sns-feed"), snsBackBtn = document.getElementById("sns-back-btn"), notifOverlay = document.getElementById("notif-overlay"), appWrapper = document.getElementById("app-wrapper"), startBtn = document.getElementById("start-btn"), chatDisplay = document.getElementById("chat-display"), sendBtn = document.getElementById("send-btn"), input = document.getElementById("message-input"), standardInput = document.getElementById("standard-input"), choiceArea = document.getElementById("choice-area"), profileScreen = document.getElementById("profile-screen"), profileTalkBtn = document.getElementById("profile-talk-btn"), profileCallBtn = document.getElementById("profile-call-btn"), joinScreen = document.getElementById("join-screen"), joinDesc = document.getElementById("join-desc");
 const regUserIcon = document.getElementById("reg-user-icon"), setupUserPreview = document.getElementById("setup-user-preview"), regAiIcon = document.getElementById("reg-ai-icon"), setupAiPreview = document.getElementById("setup-ai-preview"), regBfIcon = document.getElementById("reg-bf-icon"), setupBfPreview = document.getElementById("setup-bf-preview");
+
+// ストーリーコードの正解
+const VALID_STORY_CODE = "A9X7B2M4";
 
 // 外部画像（Unsplash等）への直リンクを廃止し、色付き背景と絵文字を組み合わせたSVGデータURIを使用
 const defaultUserIcon = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%234a90e2'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E👤%3C/text%3E%3C/svg%3E";
@@ -499,11 +517,26 @@ window.onload = async () => {
 
 window.selectEpisode = (epNum) => {
     if(epNum === 1) {
+        storyCodeModal.style.display = 'flex';
+        storyCodeInput.value = '';
+    }
+};
+
+window.closeStoryCodeModal = () => {
+    storyCodeModal.style.display = 'none';
+};
+
+window.verifyStoryCode = () => {
+    const code = storyCodeInput.value.trim().toUpperCase();
+    if(code === VALID_STORY_CODE) {
+        closeStoryCodeModal();
         if(state.messages && state.messages.hina && state.messages.hina.length > 0) {
             playModeModal.style.display = 'flex';
         } else {
             startEpisode(true);
         }
+    } else {
+        showToast("ストーリーコードが正しくありません", true);
     }
 };
 
@@ -1101,12 +1134,12 @@ function aiReply(stepKey) {
     else if(stepKey === 'g_step7_2') { res.text = `また貢いでもらうからそれまでに稼いどいてね`; state.storyStep = 16; }
     else if(stepKey === 'g_step7_3') { res.text = `言われなくても使ってあげるから安心しな`; state.storyStep = 16; }
     else if(stepKey === 'g_step8') {
-        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = `じゃあこれからお泊まりだからじゃあなw`;
+        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = `元カレ君には悪いけど、今から泊まりだからじゃあなw`;
         state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
         setTimeout(() => {
             showTyping(currentRoom, () => {
                 let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
-                res2.text = `${UN}くんはせいぜい想像しててー笑`;
+                res2.text = `${UN}くんはせいぜい想像してな笑`;
                 state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); save();
                 
                 setTimeout(() => {
