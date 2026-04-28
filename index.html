@@ -1043,7 +1043,7 @@ function aiReply(stepKey) {
     else if(stepKey === 'step2_1') { res.text = `浮気される方が悪くない？`; state.storyStep = 2; }
     else if(stepKey === 'step2_2') { res.text = `ごめんけど好きじゃないかな`; state.storyStep = 2; }
     else if(stepKey === 'step2_3') { res.text = `うるさいな〜笑 とにかくもう好きじゃないから別れて`; state.storyStep = 2; }
-    else if(stepKey === 'step3') { res.text = `じゃあ${AFP}への気持ち、今すぐ形で見せてよ。\n今からその人と、ずっと行きたかった高級なお店でディナーするんだけど、そのZ${UN}くんが払いなよ。\nそれができたら、ブロックするの少しだけ待ってあげてもいいよ？`; state.storyStep = 3; }
+    else if(stepKey === 'step3') { res.text = `じゃあ${AFP}への気持ち、今すぐ形で見せてよ。\n今からその人と、ずっと行きたかった高級なお店でディナーするんだけど、それ${UN}くんが払いなよ。\nそれができたら、ブロックするの少しだけ待ってあげてもいいよ？`; state.storyStep = 3; }
     else if(stepKey === 'branch_refusal') { res.text = "じゃあもう二度と会えないね〜ばいばい笑"; state.storyStep = 3.5; }
     else if(stepKey === 'branch_accept') { res.text = "とりあえず10000Zもらおうかな"; state.storyStep = 4; }
     else if(stepKey === 'payment_done') { res.text = `Zはありがとうだけど${UN}くんには残念な報告するね。\nちょうど今目の前で${BN}くんから告白されて、付き合うことになったんだよね〜\nだから${UN}くんは${AFP}のATM兼奴隷として使ってあげる笑\nいいよね？`; state.storyStep = 5; }
@@ -1134,12 +1134,12 @@ function aiReply(stepKey) {
     else if(stepKey === 'g_step7_2') { res.text = `また貢いでもらうからそれまでに稼いどいてね`; state.storyStep = 16; }
     else if(stepKey === 'g_step7_3') { res.text = `言われなくても使ってあげるから安心しな`; state.storyStep = 16; }
     else if(stepKey === 'g_step8') {
-        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = `元カレ君には悪いけど、今から泊まりだからじゃあなw`;
+        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = `元カレ君には悪いけど、今から泊まりだからじゃあなw\nお前の元カノもらうわ`;
         state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
         setTimeout(() => {
             showTyping(currentRoom, () => {
                 let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
-                res2.text = `${UN}くんはせいぜい想像してな笑`;
+                res2.text = `ごめんとは思ってるよ\nだから${AFP}と${BN}くんのこと想像することは許してあげる笑`;
                 state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); save();
                 
                 setTimeout(() => {
