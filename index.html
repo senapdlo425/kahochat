@@ -250,8 +250,8 @@
   <div class="disclaimer-card">
     <h2 class="disclaimer-title">⚠️ 免責事項</h2>
     <p class="disclaimer-text">• これはフィクションのストーリーを体験するためのエンターテイメントアプリです。</p>
-    <p class="disclaimer-text">• 登場する人物やZ-Pointなどの名称はすべて架空のものであり、現実の金銭的価値はありません。</p>
-    <p class="disclaimer-text">• 本アプリ内のZ-Point残高(Z)は現金への払い戻しや換金、他サービスでの利用は一切できません。</p>
+    <p class="disclaimer-text">• 登場する人物やZ-Payなどの名称はすべて架空のものであり、現実の金銭的価値はありません。</p>
+    <p class="disclaimer-text">• 本アプリ内のZ-Pay残高(Z)は現金への払い戻しや換金、他サービスでの利用は一切できません。</p>
     <p class="disclaimer-text">• このアプリ内のZはフィクション上のポイントであり、現実の通貨・仮想通貨・電子マネーではありません。</p>
     <button id="disclaimer-btn" class="disclaimer-btn">同意してはじめる</button>
   </div>
@@ -342,4 +342,848 @@
 </div>
 
 <div id="members-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-card"><h3 class="modal-title">メンバー (3)</h3><div class="member-list" id="members-list"></div><button class="primary
+  <div class="modal-card"><h3 class="modal-title">メンバー (3)</h3><div class="member-list" id="members-list"></div><button class="primary-btn" style="margin-top: 15px;" onclick="closeMembers()">閉じる</button></div>
+</div>
+
+<div id="notif-overlay" class="notif-overlay" style="display: none;">
+  <div class="notif-banner" id="notif-banner"><div class="notif-icon">💬</div><div class="notif-body"><div id="notif-sender" class="notif-title"></div><div id="notif-text" class="notif-text"></div></div></div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<div id="zpay-screen" class="zpay-wrapper" style="display: none;">
+  <div class="zpay-header">
+    <div class="zpay-header-left"><span class="zpay-logo">Z-Pay</span><span class="zpay-badge">PREMIUM</span></div>
+    <button class="zpay-close" onclick="closeZPay()">✕</button>
+  </div>
+
+  <div id="zpay-home" class="zpay-page">
+    <div class="zpay-card">
+      <p class="zpay-label">Total Balance</p>
+      <h1 class="zpay-balance"><span id="zpay-balance-display">0</span><span style="font-size: 24px; margin-left: 4px;">Z</span></h1>
+      <p style="font-size: 10px; color: #888; margin-top: 8px; text-align: right;">※Z-Pay残高の有効期限は180日とする<br>※このアプリ内のZはフィクション上のポイントであり、現実の通貨・仮想通貨・電子マネーではありません。</p>
+      <div class="zpay-card-chip"></div>
+    </div>
+    <div class="zpay-actions">
+      <div class="zpay-action-btn" onclick="openZPaySend()"><div class="zpay-icon send-icon">↑</div><span>Zをプレゼント</span></div>
+      <div class="zpay-action-btn" onclick="openZPayHistory()"><div class="zpay-icon history-icon">≡</div><span>履歴</span></div>
+    </div>
+  </div>
+
+  <div id="zpay-send" class="zpay-page" style="display: none;">
+    <h2 class="zpay-page-title">Zをプレゼント</h2>
+    <div class="zpay-recipient-wrap">
+      <label class="zpay-recipient-label">プレゼントする相手を選択</label>
+      <select id="zpay-recipient-select" class="zpay-select">
+        </select>
+    </div>
+    <div class="zpay-input-wrap large-input">
+      <span class="zpay-currency">Z</span>
+      <input type="number" id="zpay-amount-input" placeholder="0" class="zpay-amount">
+    </div>
+    <button class="zpay-primary-btn" onclick="executeSend()">スワイプしてZをプレゼント</button>
+  </div>
+
+  <div id="zpay-history" class="zpay-page" style="display: none;">
+    <h2 class="zpay-page-title">履歴</h2>
+    <div class="zpay-history-list" id="zpay-history-list"></div>
+  </div>
+</div>
+
+<div id="app-wrapper" class="app-wrapper" style="display: none;">
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="sidebar-header">メニュー</div>
+      <div class="chat-list">
+        <div class="chat-item menu-item" onclick="openSNS()"><div class="icon-container"><div class="menu-icon">📸</div></div><div class="list-content"><span class="list-name">SNS（思い出）</span></div></div>
+        <div class="sidebar-divider">トーク</div>
+        <div class="chat-item active" id="list-hina" onclick="switchRoom('hina')"><div class="icon-container"><img id="list-icon-hina" src="" class="list-icon"><div class="badge" id="badge-hina" style="display:none">0</div></div><div class="list-content"><div class="list-top"><span class="list-name" id="display-ai-name"></span><span id="list-time-hina" class="list-time"></span></div><div class="list-bottom"><span id="list-preview-hina" class="list-preview"></span></div></div></div>
+        <div class="chat-item hidden" id="list-bf" onclick="switchRoom('bf')"><div class="icon-container"><img id="list-icon-bf" src="" class="list-icon"><div class="badge" id="badge-bf" style="display:none">0</div></div><div class="list-content"><div class="list-top"><span class="list-name" id="display-bf-name"></span><span id="list-time-bf" class="list-time"></span></div><div class="list-bottom"><span id="list-preview-bf" class="list-preview"></span></div></div></div>
+        <div class="chat-item hidden" id="list-group" onclick="switchRoom('group')"><div class="icon-container"><div class="group-icon-stack"><img id="stack-icon-ai" src="" class="list-icon stack-1"><img id="stack-icon-bf" src="" class="list-icon stack-2"></div><div class="badge" id="badge-group" style="display:none">0</div></div><div class="list-content"><div class="list-top"><span class="list-name">グループ</span><span id="list-time-group" class="list-time"></span></div><div class="list-bottom"><span id="list-preview-group" class="list-preview">招待されています</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="chat-header" id="chat-header"><span id="chat-header-title"></span><button id="chat-header-btn" class="chat-header-btn" style="display:none;" onclick="openMembers()">👥</button></div>
+      <div class="chat-box" id="chat-display"></div>
+      <div id="join-screen" class="join-wrapper" style="display: none;"><div class="join-card"><div class="group-icon-large">👥</div><h3>招待されました</h3><p id="join-desc"></p><button class="primary-btn" onclick="joinGroup()">参加する</button></div></div>
+      
+      <div id="choice-area" class="choice-area" style="display: none;"></div>
+      
+      <div class="input-area" id="standard-input">
+        <button id="plus-btn" class="plus-btn" onclick="openZPay()">＋</button>
+        <input type="text" id="message-input" placeholder="メッセージ...">
+        <button id="send-btn">送信</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
+<script>
+// 免責事項の制御ロジック
+document.getElementById("disclaimer-btn").onclick = () => {
+  document.getElementById("disclaimer-screen").style.display = "none";
+};
+
+// XSS（クロスサイトスクリプティング）を防止する関数
+function escapeHTML(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[&<>'"]/g, match => {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[match];
+  });
+}
+
+const setupScreen = document.getElementById("setup-screen"), episodeScreen = document.getElementById("episode-screen"), playModeModal = document.getElementById("play-mode-modal");
+const restartOptionModal = document.getElementById("restart-option-modal");
+const snsScreen = document.getElementById("sns-screen"), snsFeed = document.getElementById("sns-feed"), snsBackBtn = document.getElementById("sns-back-btn"), notifOverlay = document.getElementById("notif-overlay"), appWrapper = document.getElementById("app-wrapper"), startBtn = document.getElementById("start-btn"), chatDisplay = document.getElementById("chat-display"), sendBtn = document.getElementById("send-btn"), input = document.getElementById("message-input"), standardInput = document.getElementById("standard-input"), choiceArea = document.getElementById("choice-area"), profileScreen = document.getElementById("profile-screen"), profileTalkBtn = document.getElementById("profile-talk-btn"), profileCallBtn = document.getElementById("profile-call-btn"), joinScreen = document.getElementById("join-screen"), joinDesc = document.getElementById("join-desc");
+const regUserIcon = document.getElementById("reg-user-icon"), setupUserPreview = document.getElementById("setup-user-preview"), regAiIcon = document.getElementById("reg-ai-icon"), setupAiPreview = document.getElementById("setup-ai-preview"), regBfIcon = document.getElementById("reg-bf-icon"), setupBfPreview = document.getElementById("setup-bf-preview");
+
+// 外部画像（Unsplash等）への直リンクを廃止し、色付き背景と絵文字を組み合わせたSVGデータURIを使用
+const defaultUserIcon = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%234a90e2'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E👤%3C/text%3E%3C/svg%3E";
+const defaultAiIcon = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23e24a8d'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E👩%3C/text%3E%3C/svg%3E";
+const bfIcon = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%234ae25c'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E👱‍♂️%3C/text%3E%3C/svg%3E";
+
+// HTML初期状態のプレビュー画像にデフォルトSVGをセット
+setupUserPreview.src = defaultUserIcon;
+setupAiPreview.src = defaultAiIcon;
+setupBfPreview.src = bfIcon;
+
+let currentRoom = 'hina', isFirstTime = true, isProcessing = false;
+let currentProfileRole = ''; let callTimeout1, callTimeout2; 
+let isEditingSetup = false;
+
+// ★Z-Payの初期残高は15000Zに設定されています
+let state = { names: { user: "", ai: "", bf: "" }, firstPerson: "僕", aiFirstPerson: "私", userIcon: defaultUserIcon, aiIcon: defaultAiIcon, bfIcon: bfIcon, storyStep: 0, messages: { hina: [], group: [], bf: [] }, unread: { hina: 0, group: 0, bf: 0 }, isInvited: false, isJoined: false, isBfUnlocked: false, zpayBalance: 15000, zpayHistory: [], tributePaid: 0, tributePaidGroup: 0 };
+
+let isAutoMode = true;
+
+function getTime() { const n = new Date(); return n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); }
+function showToast(msg, isError = false) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${isError ? 'error' : ''}`; toast.innerText = msg; container.appendChild(toast); setTimeout(() => { toast.remove(); }, 3000); }
+
+window.onload = async () => {
+  try {
+    const savedState = await localforage.getItem('hinaChat_WebRelease_v1');
+    if (savedState && savedState.names && savedState.names.user) {
+      state = {
+        ...state,
+        ...savedState,
+        bfIcon: savedState.bfIcon || bfIcon,
+        names: savedState.names || { user: "", ai: "", bf: "" },
+        messages: {
+            hina: (savedState.messages && savedState.messages.hina) ? savedState.messages.hina : [],
+            group: (savedState.messages && savedState.messages.group) ? savedState.messages.group : [],
+            bf: (savedState.messages && savedState.messages.bf) ? savedState.messages.bf : []
+        },
+        unread: savedState.unread || { hina: 0, group: 0, bf: 0 },
+        zpayHistory: savedState.zpayHistory || []
+      };
+      isFirstTime = false;
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('episode-screen').style.display = 'flex';
+    } else {
+      document.getElementById('setup-screen').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+};
+
+window.selectEpisode = (epNum) => {
+    if(epNum === 1) {
+        if(state.messages && state.messages.hina && state.messages.hina.length > 0) {
+            playModeModal.style.display = 'flex';
+        } else {
+            startEpisode(true);
+        }
+    }
+};
+
+window.closePlayModeModal = () => { playModeModal.style.display = 'none'; };
+
+window.showRestartOptionModal = () => {
+    playModeModal.style.display = 'none';
+    restartOptionModal.style.display = 'flex';
+};
+
+window.closeRestartOptionModal = () => {
+    restartOptionModal.style.display = 'none';
+    playModeModal.style.display = 'flex';
+};
+
+window.openSetupForEdit = () => {
+    restartOptionModal.style.display = 'none';
+    episodeScreen.style.display = 'none';
+    isEditingSetup = true;
+
+    document.getElementById("reg-user-name").value = state.names.user || "";
+    document.getElementById("reg-ai-name").value = state.names.ai || "";
+    document.getElementById("reg-bf-name").value = state.names.bf || "";
+    document.getElementById("reg-user-fp").value = state.firstPerson || "僕";
+
+    const aiFpVal = state.aiFirstPerson || "私";
+    if (aiFpVal === state.names.ai) {
+        document.getElementById("reg-ai-fp").value = "name";
+    } else {
+        const aiFpSelect = document.getElementById("reg-ai-fp");
+        let found = false;
+        for(let i = 0; i < aiFpSelect.options.length; i++){
+            if(aiFpSelect.options[i].value === aiFpVal) {
+                found = true;
+                break;
+            }
+        }
+        if(found){
+            aiFpSelect.value = aiFpVal;
+        } else {
+            aiFpSelect.value = "私";
+        }
+    }
+
+    setupUserPreview.src = state.userIcon || defaultUserIcon;
+    setupAiPreview.src = state.aiIcon || defaultAiIcon;
+    setupBfPreview.src = state.bfIcon || bfIcon;
+
+    document.getElementById("setup-title-text").innerText = "設定の変更";
+    startBtn.innerText = "変更して物語を開始する";
+
+    setupScreen.style.display = 'flex';
+};
+
+window.startEpisode = (isRestart) => {
+    playModeModal.style.display = 'none';
+    restartOptionModal.style.display = 'none';
+    episodeScreen.style.display = 'none';
+
+    if(isRestart) {
+        state.storyStep = 0;
+        state.messages = { hina: [], group: [], bf: [] };
+        state.unread = { hina: 0, group: 0, bf: 0 };
+        state.isInvited = false;
+        state.isJoined = false;
+        state.isBfUnlocked = false;
+        state.zpayBalance = 15000;
+        state.zpayHistory = [{ type: 'charge', amount: 15000, desc: '初期残高', date: getTime() }];
+        state.tributePaid = 0;
+        state.tributePaidGroup = 0;
+        
+        currentRoom = 'hina';
+        isFirstTime = true;
+        save();
+    } else {
+        isFirstTime = false;
+    }
+
+    openSNS();
+};
+
+window.openZPayHistory = () => { 
+  document.getElementById('zpay-home').style.display = 'none'; 
+  document.getElementById('zpay-history').style.display = 'flex'; 
+  const list = document.getElementById('zpay-history-list'); 
+  if(state.zpayHistory.length === 0) { 
+    list.innerHTML = `<p style="text-align:center; color:#888; margin-top:20px;">履歴がありません</p>`; return; 
+  } 
+  list.innerHTML = state.zpayHistory.slice().reverse().map(h => 
+    `<div class="history-item"><div class="history-info"><span class="history-title">${escapeHTML(h.desc)}</span><span class="history-date">${h.date}</span></div><span class="history-amount ${h.type === 'charge' ? 'plus' : 'minus'}">${h.type === 'charge' ? '+' : '-'}${h.amount.toLocaleString()} Z</span></div>`
+  ).join(''); 
+};
+
+window.openZPay = () => { document.getElementById('zpay-balance-display').innerText = state.zpayBalance.toLocaleString(); document.getElementById('zpay-home').style.display = 'flex'; document.getElementById('zpay-send').style.display = 'none'; document.getElementById('zpay-history').style.display = 'none'; document.getElementById('zpay-screen').style.display = 'flex'; };
+window.closeZPay = () => { document.getElementById('zpay-screen').style.display = 'none'; };
+
+window.openZPaySend = () => {
+  document.getElementById('zpay-home').style.display = 'none';
+  document.getElementById('zpay-send').style.display = 'flex';
+  const sel = document.getElementById('zpay-recipient-select');
+  sel.innerHTML = `<option value="hina">${escapeHTML(state.names.ai)}</option><option value="bf">${escapeHTML(state.names.bf)}</option><option value="group">グループ</option>`;
+  sel.value = currentRoom;
+};
+
+window.executeSend = () => {
+  const amount = parseInt(document.getElementById('zpay-amount-input').value);
+  if(isNaN(amount) || amount <= 0) return showToast("正しい数値を入力してください", true);
+  if(amount > state.zpayBalance) return showToast("残高が不足しています", true);
+  const targetRoom = document.getElementById('zpay-recipient-select').value;
+  let targetName = targetRoom === 'hina' ? state.names.ai : (targetRoom === 'bf' ? state.names.bf : "グループ");
+  
+  state.zpayBalance -= amount;
+  state.zpayHistory.push({ type: 'send', amount: amount, desc: `${targetName} 宛にプレゼント`, date: getTime() });
+  showToast(`${amount.toLocaleString()} Z をプレゼントしました`);
+  document.getElementById('zpay-amount-input').value = ""; closeZPay();
+
+  state.messages[targetRoom].push({ role:'user', name:state.names.user, amount: amount, isPayment: true, time:getTime() });
+  if(currentRoom === targetRoom) render(); save();
+
+  if (isAutoMode) {
+    if(state.storyStep === 4 && targetRoom === 'hina') {
+        state.tributePaid = (state.tributePaid || 0) + amount;
+        if(state.tributePaid >= 10000) {
+            isProcessing = true; 
+            setTimeout(() => aiReply('payment_done'), 1000);
+        } else {
+            isProcessing = true; showTyping(targetRoom, () => {
+              const remain = 10000 - state.tributePaid;
+              state.messages[targetRoom].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:`足りないよ。あと${remain.toLocaleString()}Z送って`, time:getTime() });
+              isProcessing = false; if(currentRoom === targetRoom) render(); triggerEffects(state.names.ai, `足りないよ。あと${remain.toLocaleString()}Z送って`, false); save();
+            });
+        }
+    } else if(state.storyStep === 13 && targetRoom === 'group') {
+        state.tributePaidGroup = (state.tributePaidGroup || 0) + amount;
+        if(state.tributePaidGroup >= 5000) {
+            isProcessing = true; 
+            setTimeout(() => aiReply('g_payment_done'), 1000);
+        } else {
+            isProcessing = true; showTyping(targetRoom, () => {
+              const remain = 5000 - state.tributePaidGroup;
+              state.messages[targetRoom].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:`足りないよ。あと${remain.toLocaleString()}Z送って笑`, time:getTime() });
+              isProcessing = false; if(currentRoom === targetRoom) render(); triggerEffects(state.names.ai, `足りないよ。あと${remain.toLocaleString()}Z送って笑`, false); save();
+            });
+        }
+    } else {
+        isProcessing = true; showTyping(targetRoom, () => {
+          let resText = targetRoom === 'bf' ? "急にZ送ってきてどうした？まぁ貰っとくわｗ" : "Zありがとうｗ";
+          let resRole = targetRoom === 'bf' ? 'bf' : 'ai';
+          let resIcon = targetRoom === 'bf' ? state.bfIcon : state.aiIcon;
+          let resName = targetRoom === 'bf' ? state.names.bf : state.names.ai;
+          state.messages[targetRoom].push({ role:resRole, name:resName, icon:resIcon, text:resText, time:getTime() });
+          isProcessing = false; if(currentRoom === targetRoom) render(); triggerEffects(resName, resText, false); save();
+        });
+    }
+  }
+};
+
+window.openMembers = () => { 
+  document.getElementById("members-list").innerHTML = `
+    <div class="member-item"><img src="${state.userIcon}" class="member-icon"><span class="member-name">${escapeHTML(state.names.user)} (あなた)</span></div>
+    <div class="member-item"><img src="${state.aiIcon}" class="member-icon" onclick="closeMembers(); openProfile('ai')"><span class="member-name">${escapeHTML(state.names.ai)}</span></div>
+    <div class="member-item"><img src="${state.bfIcon}" class="member-icon" onclick="closeMembers(); openProfile('bf')"><span class="member-name">${escapeHTML(state.names.bf)}</span></div>`; 
+  document.getElementById("members-modal").style.display = "flex"; 
+};
+window.closeMembers = () => { document.getElementById("members-modal").style.display = "none"; };
+window.openProfile = (role) => { currentProfileRole = role; const nameEl = document.getElementById("profile-name"), avatarEl = document.getElementById("profile-avatar"), bgEl = document.getElementById("profile-bg"), statusEl = document.getElementById("profile-status"), addBtn = document.getElementById("add-friend-btn"); if (role === 'ai') { nameEl.innerText = state.names.ai; avatarEl.src = state.aiIcon; bgEl.style.backgroundImage = `url("${state.aiIcon}")`; statusEl.innerText = "新しい幸せ見つけた✨"; addBtn.style.display = "none"; profileTalkBtn.onclick = () => { closeProfile(); switchRoom('hina'); }; } else if (role === 'bf') { nameEl.innerText = state.names.bf; avatarEl.src = state.bfIcon; bgEl.style.backgroundImage = `url("${state.bfIcon}")`; statusEl.innerText = "俺が一番。ひなは俺のもの。"; addBtn.style.display = "flex"; profileTalkBtn.onclick = () => { closeProfile(); if (!state.isBfUnlocked) { state.isBfUnlocked = true; updateSidebarDisplay(); } switchRoom('bf'); }; } profileScreen.style.display = "flex"; };
+window.closeProfile = () => { profileScreen.style.display = "none"; };
+
+// 通話機能（音声削除版）
+profileCallBtn.onclick = () => { 
+  closeProfile(); 
+  const screen = document.getElementById("call-screen"); 
+  document.getElementById("call-avatar").src = currentProfileRole === 'ai' ? state.aiIcon : state.bfIcon; 
+  document.getElementById("call-name").innerText = currentProfileRole === 'ai' ? state.names.ai : state.names.bf; 
+  document.getElementById("call-status").innerText = "発信中..."; 
+  document.getElementById("call-subtitles").innerText = ""; 
+  screen.style.display = "flex"; 
+  
+  callTimeout1 = setTimeout(() => { 
+    document.getElementById("call-status").innerText = "0:00"; 
+    if (currentProfileRole === 'ai') { 
+      document.getElementById("call-subtitles").innerText = `「あ、ごめん。今ちょっと彼といるから無理。切るね。」`; 
+    } else { 
+      document.getElementById("call-subtitles").innerText = `「は？お前ウザいんだけど。二度とかけてくんな。」`; 
+    } 
+    callTimeout2 = setTimeout(() => { 
+      document.getElementById("call-subtitles").innerText += "\n（ツーツーツー...）"; 
+      setTimeout(() => { endCall("不在着信"); }, 1500); 
+    }, 3000); 
+  }, 3000); 
+};
+window.endCallForce = () => { clearTimeout(callTimeout1); clearTimeout(callTimeout2); endCall("キャンセル"); };
+function endCall(msg) { document.getElementById("call-screen").style.display = "none"; const targetRoom = currentProfileRole === 'ai' ? 'hina' : 'bf'; state.messages[targetRoom].push({ role:'user', name:state.names.user, text: `☎️ 通話 ${msg}`, time: getTime() }); if(targetRoom === currentRoom) render(); save(); updateSidebarDisplay(); }
+
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            const max = 300; 
+            if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
+            else { if (h > max) { w = Math.round(w * max / h); h = max; } }
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            callback(canvas.toDataURL('image/jpeg', 0.8)); 
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+regUserIcon.onchange = (e) => { const f = e.target.files[0]; if (f) { compressImage(f, (res) => { state.userIcon = res; setupUserPreview.src = res; }); } };
+regAiIcon.onchange = (e) => { const f = e.target.files[0]; if (f) { compressImage(f, (res) => { state.aiIcon = res; setupAiPreview.src = res; }); } };
+regBfIcon.onchange = (e) => { const f = e.target.files[0]; if (f) { compressImage(f, (res) => { state.bfIcon = res; setupBfPreview.src = res; }); } };
+
+async function save() { 
+  try { 
+    await localforage.setItem('hinaChat_WebRelease_v1', state); 
+  } catch (err) { console.error('保存エラー:', err); }
+}
+
+// 演出機能（音声は削除、バイブレーションと通知ポップアップのみ）
+function triggerEffects(sender, text, showPopup = false) { 
+  if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+  if (showPopup) { 
+    const sEl = document.getElementById("notif-sender"); 
+    const tEl = document.getElementById("notif-text"); 
+    if(sEl && tEl) { 
+      sEl.innerText = sender; 
+      tEl.innerText = text; 
+      notifOverlay.style.display = "flex"; 
+      setTimeout(() => { notifOverlay.style.display = "none"; }, 3000); 
+    } 
+  } 
+}
+
+// テキストベースになったSNS生成機能
+function generateSNS() { 
+  const ps = [
+    { user: state.names.ai, time: "1年前", text: `今日からよろしくね✨ ずっと一緒にいようね！\n#記念日 #よろしくね` }, 
+    { user: state.names.ai, time: "半年前", text: `半年記念日！感謝。大好き。\nあっという間の半年だったなぁ💭` }, 
+    { user: state.names.ai, time: "2ヶ月前", text: `本当の幸せってなんだろう。\n最近いろいろ考えちゃうな。` }, 
+    { user: state.names.ai, time: "1ヶ月前", text: `刺激。環境変えたい。\n退屈な毎日はもう嫌だなー` }, 
+    { user: state.names.ai, time: "数日前", text: `運命の人に会えた✨\n本当に優しくてかっこよくて最高！\n#MyHero #幸せ` }, 
+    { user: state.names.ai, time: "今日", text: `私の答え。\n新しい道に進むことに決めた。後悔はしてない。` }
+  ]; 
+  snsFeed.innerHTML = ps.map(p => `
+    <div class="sns-post">
+      <img src="${state.aiIcon}" class="sns-post-icon">
+      <div class="sns-post-body">
+        <div class="sns-post-user-row">
+          <div class="sns-post-user">${escapeHTML(p.user)}</div>
+          <div class="sns-post-time">${p.time}</div>
+        </div>
+        <div class="sns-post-text">${escapeHTML(p.text).replace(/\n/g, '<br>')}</div>
+      </div>
+    </div>`).join(''); 
+}
+
+window.openSNS = () => { generateSNS(); snsScreen.style.display = "flex"; };
+snsBackBtn.onclick = () => {
+  snsScreen.style.display = "none";
+  appWrapper.style.display = "flex";
+  if (state.messages.hina.length === 0) {
+    state.messages.hina.push({ role: 'ai', name: state.names.ai, text: 'ねえ、大事な話なんだけど、別れてほしい', icon: state.aiIcon, time: getTime() });
+  }
+  render();
+  updateSidebarDisplay();
+  checkUIState();
+  save();
+  if (isFirstTime) {
+    triggerEffects(state.names.ai, "ねえ、大事な話なんだけど、別れてほしい", true);
+    isFirstTime = false;
+  }
+};
+
+startBtn.onclick = () => { 
+  const uName = document.getElementById("reg-user-name").value.trim();
+  const aName = document.getElementById("reg-ai-name").value.trim();
+  const bName = document.getElementById("reg-bf-name").value.trim();
+  const uFp = document.getElementById("reg-user-fp").value;
+  const aFpVal = document.getElementById("reg-ai-fp").value;
+
+  if(!uName || !aName || !bName) { alert("3人すべての名前を入力してください！"); return; }
+  
+  state.names.user = uName; 
+  state.names.ai = aName; 
+  state.names.bf = bName; 
+  state.firstPerson = uFp;
+  state.aiFirstPerson = aFpVal === 'name' ? aName : aFpVal; 
+  
+  setupScreen.style.display = "none"; 
+
+  if (isEditingSetup) {
+      isEditingSetup = false;
+      startEpisode(true);
+  } else {
+      state.zpayHistory.push({ type: 'charge', amount: 15000, desc: '初期残高', date: getTime() }); 
+      save(); 
+      episodeScreen.style.display = 'flex'; 
+  }
+};
+
+document.getElementById("notif-banner").onclick = () => { notifOverlay.style.display = "none"; appWrapper.style.display = "flex"; if(state.messages.hina.length === 0) { state.messages.hina.push({ role:'ai', name:state.names.ai, text:'ねえ、大事な話なんだけど、別れてほしい', icon:state.aiIcon, time:getTime() }); } render(); updateSidebarDisplay(); checkUIState(); save(); };
+window.switchRoom = (id) => { currentRoom = id; state.unread[id] = 0; document.querySelectorAll('.chat-item').forEach(el=>el.classList.remove('active')); document.getElementById(`list-${id}`).classList.add('active'); checkUIState(); render(); updateSidebarDisplay(); save(); };
+
+input.onclick = () => {
+  if (input.readOnly && choiceArea.innerHTML !== '') {
+    input.blur(); 
+    choiceArea.style.display = 'flex';
+    setTimeout(() => { chatDisplay.scrollTop = chatDisplay.scrollHeight; }, 50);
+  }
+};
+
+function checkUIState() {
+  const headerBtn = document.getElementById("chat-header-btn"); if (currentRoom === 'group' && state.isJoined) headerBtn.style.display = "block"; else headerBtn.style.display = "none";
+  if (currentRoom === 'group' && !state.isJoined) { chatDisplay.style.display = 'none'; standardInput.style.display = 'none'; choiceArea.style.display = 'none'; joinScreen.style.display = 'flex'; joinDesc.innerText = `${state.names.ai}さんと${state.names.bf}さんのグループです。`; }
+  else { 
+    chatDisplay.style.display = 'flex'; joinScreen.style.display = 'none'; 
+    standardInput.style.display = 'flex'; 
+    choiceArea.style.display = 'none'; 
+    choiceArea.innerHTML = '';
+    input.readOnly = false;
+    input.placeholder = "メッセージ...";
+
+    if (isAutoMode) {
+      let UN = state.names.user;
+      let AN = state.names.ai;
+      let BN = state.names.bf;
+      let FP = state.firstPerson || "僕";
+      let AFP = state.aiFirstPerson || "私";
+
+      if (currentRoom === 'hina') {
+        if (state.storyStep === 0) showChoices([
+            {text:"嘘でしょ？ 冗談はやめてよ……", next:'step1_1'},
+            {text:"待って！ 何か悪いことしたなら直すから、理由を教えて！", next:'step1_2'},
+            {text:"……いきなりすぎて頭真っ白なんだけど。せめて説明して", next:'step1_3'}
+        ]);
+        else if (state.storyStep === 1) showChoices([
+            {text:"それって、浮気してたってこと……？", next:'step2_1'},
+            {text:`${FP}のことは、もう1ミリも好きじゃないの？`, next:'step2_2'},
+            {text:`そんな……${FP}だって一生懸命尽くしてきたのに、、`, next:'step2_3'}
+        ]);
+        else if (state.storyStep === 2) showChoices([
+            {text:"せめて最後にもう一度だけ会って話したい", next:'step3'},
+            {text:`${FP}の何がダメだったのか具体的に教えて…治すから。`, next:'step3'},
+            {text:"その人より尽くすから捨てないで！", next:'step3'}
+        ]);
+        else if (state.storyStep === 3) showChoices([
+            {text:"そんなの酷すぎるよ……", next:'branch_refusal'},
+            {text:"分かった、Z送るから金額を教えて", next:'branch_accept'},
+            {text:"他の男との食事代出すなんて、、、", next:'branch_refusal'}
+        ]);
+        else if (state.storyStep === 3.5) showChoices([
+            {text:"ごめん、やっぱり送るよ", next:'branch_accept'},
+            {text:"それは嫌だ、送るから金額教えて", next:'branch_accept'}
+        ]);
+        else if (state.storyStep === 5) showChoices([
+            {text:"え、今彼氏できたってこと？ちょっと待ってよ", next:'step5_1'},
+            {text:"ATM兼奴隷ってどういうこと？", next:'step5_2'},
+            {text:"よく分からないけど、そばにいられるなら何でもいいよ", next:'step6'}
+        ]);
+        else if (state.storyStep === 5.1) showChoices([
+            {text:"そんな、、", next:'step5_1_1'},
+            {text:"うそ、、", next:'step5_1_1'}
+        ]);
+        else if (state.storyStep === 5.3) showChoices([
+            {text:`わかった、${AN}の奴隷になる`, next:'step6'},
+            {text:"考えさせてほしい", next:'step5_heart_2'}
+        ]);
+        else if (state.storyStep === 5.4) showChoices([
+            {text:"奴隷になります", next:'step6'}
+        ]);
+      } else if (currentRoom === 'group' && state.isJoined) {
+        if (state.storyStep === 7) showChoices([
+            {text:`${AN}様、かしこまりました`, next:'g_step1'},
+            {text:`${AN}様、わかりました`, next:'g_step1_alt'}
+        ]);
+        else if (state.storyStep === 8) showChoices([
+            {text:`${BN}様、よろしくお願いします`, next:'g_step2'}
+        ]);
+        else if (state.storyStep === 9) showChoices([
+            {text:"一生懸命働きます、、", next:'g_branch_accept'},
+            {text:`やっぱ${FP}無理だ`, next:'g_branch_refusal'}
+        ]);
+        else if (state.storyStep === 10) showChoices([
+            {text:`${BN}様、反抗してしまいすみませんでした、、`, next:'g_branch_accept2'},
+            {text:"ごめんなさい、もう逆らわないので許してください", next:'g_branch_accept2'}
+        ]);
+        else if (state.storyStep === 11) showChoices([
+            {text:"はい、、", next:'g_step4'},
+            {text:"かしこまりました", next:'g_step4'}
+        ]);
+        else if (state.storyStep === 12) showChoices([
+            {text:"おいくらでしょうか？", next:'g_step5'},
+            {text:"何Zお貢ぎすればいいですか？", next:'g_step5'},
+            {text:"5000Zで大丈夫ですか？", next:'g_step5'}
+        ]);
+        else if (state.storyStep === 14) showChoices([
+            {text:"教えてください、、", next:'g_step6_1'},
+            {text:"デート代ですか？", next:'g_step6_2'},
+            {text:"考えたくないです、、", next:'g_step6_3'}
+        ]);
+        else if (state.storyStep === 15) showChoices([
+            {text:"悔しい、、", next:'g_step7_1'},
+            {text:"教えていただきありがとうございます", next:'g_step7_2'},
+            {text:"たくさん使ってください", next:'g_step7_3'}
+        ]);
+        else if (state.storyStep === 16) showChoices([
+            {text:"はい、、", next:'g_step8'},
+            {text:"かしこまりました", next:'g_step8'},
+            {text:"わかりました、、", next:'g_step8'}
+        ]);
+      }
+    }
+  }
+}
+window.joinGroup = () => { 
+  state.isJoined = true; 
+  state.storyStep = 7; 
+  const t = getTime(); 
+  const UN = state.names.user;
+  const AN = state.names.ai;
+  const BN = state.names.bf;
+  const msg = `${UN}くんこれからよろしくね〜笑\n奴隷としてのルール送ってあげるから、ちゃんと守ること。\n・${AN}と${BN}くんの命令には絶対に逆らわないこと\n・${AN}と${BN}くんのことは様付けで呼ぶこと。元カノだからといって呼び捨ては禁止ね\n・このグループLINEで呼び出されたらすぐに来ること。`;
+  state.messages.group.push({ role:'ai', name:state.names.ai, text: msg, icon:state.aiIcon, time:t }); 
+  switchRoom('group'); 
+};
+
+function render() {
+  chatDisplay.innerHTML = ''; 
+  document.getElementById("chat-header-title").innerText = currentRoom === 'hina' ? state.names.ai : (currentRoom === 'bf' ? state.names.bf : "グループ");
+  
+  state.messages[currentRoom].forEach((m, i) => {
+    const safeText = escapeHTML(m.text);
+    const safeName = escapeHTML(m.name);
+    
+    const isU = m.role==='user', wrapper = isU?'user-wrapper':'ai-wrapper', cls = m.role==='bf'?'bf-message':(isU?'user-message':'ai-message');
+    const isRead = isU && i < state.messages[currentRoom].length - 1;
+    const icon = m.role==='user' ? state.userIcon : (m.role==='bf' ? state.bfIcon : state.aiIcon);
+    const clickAttr = isU ? '' : `onclick="openProfile('${m.role}')"`;
+    
+    if(m.isPayment) { 
+        chatDisplay.innerHTML += `<div class="message-wrapper user-wrapper"><div class="meta-info">${isRead?'<span class="read-mark">既読</span>':''}<span>${m.time}</span></div><div class="message-content"><div class="payment-bubble"><div class="payment-header">💎 Z をプレゼントしました</div><div class="payment-body"><div class="payment-amount">${m.amount.toLocaleString()} Z</div><div class="payment-desc">相手にプレゼントしました</div></div></div></div><img src="${icon}" class="chat-icon"></div>`;
+    } else { 
+        chatDisplay.innerHTML += `<div class="message-wrapper ${wrapper}">${isU ? `<div class="meta-info">${isRead?'<span class="read-mark">既読</span>':''}<span>${m.time}</span></div>` : `<img src="${icon}" class="chat-icon" ${clickAttr}>`}<div class="message-content">${isU ? '' : `<div class="ai-name">${safeName}</div>`}<div class="message ${cls}">${safeText}</div></div>${isU ? `<img src="${icon}" class="chat-icon">` : `<span>${m.time}</span>`}</div>`; 
+    }
+  }); 
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function showTyping(roomId, callback) { if (roomId === currentRoom) { const t = document.createElement('div'); t.className='typing'; t.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; chatDisplay.appendChild(t); chatDisplay.scrollTop = chatDisplay.scrollHeight; setTimeout(() => { t.remove(); callback(); }, 3000); } else { setTimeout(callback, 3000); } }
+
+function showChoices(opts) { 
+  standardInput.style.display = 'flex'; 
+  choiceArea.style.display = 'none'; 
+  choiceArea.innerHTML = ''; 
+  input.readOnly = true;
+  input.placeholder = "タップして返信を選択...";
+
+  opts.forEach(o => { 
+    const b = document.createElement('div'); 
+    b.className='choice-btn'; 
+    b.innerText = o.text; 
+    b.onclick = () => { 
+      if(isProcessing) return; 
+      if(isAutoMode) isProcessing = true; 
+      
+      state.messages[currentRoom].push({ role:'user', name:state.names.user, text:o.text, time:getTime() }); 
+      
+      choiceArea.style.display = 'none';
+      choiceArea.innerHTML = '';
+      input.readOnly = false;
+      input.placeholder = "メッセージ...";
+
+      render(); 
+      save(); 
+      if(isAutoMode) { setTimeout(() => aiReply(o.next), 500); } 
+    }; 
+    choiceArea.appendChild(b); 
+  }); 
+}
+
+function aiReply(stepKey) {
+  let UN = state.names.user;
+  let AN = state.names.ai;
+  let BN = state.names.bf;
+  let FP = state.firstPerson || "僕";
+  let AFP = state.aiFirstPerson || "私";
+
+  if (state.storyStep === 4 && stepKey !== 'payment_done') { isProcessing = false; return; }
+  if (state.storyStep === 13 && stepKey !== 'g_payment_done') { isProcessing = false; return; }
+
+  showTyping(currentRoom, () => {
+    let res = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+    
+    // Hina
+    if(stepKey === 'step1_1') { res.text = `冗談じゃないよ笑 好きな人ができただけ。ごめんね笑`; state.storyStep = 1; }
+    else if(stepKey === 'step1_2') { res.text = `んー${UN}くんは悪いよ。魅力不足なんだから笑 他に好きな人できちゃったけど許して笑`; state.storyStep = 1; }
+    else if(stepKey === 'step1_3') { res.text = `説明も何も、${UN}くんより素敵な人と出会っちゃっただけ`; state.storyStep = 1; }
+    else if(stepKey === 'step2_1') { res.text = `浮気される方が悪くない？`; state.storyStep = 2; }
+    else if(stepKey === 'step2_2') { res.text = `ごめんけど好きじゃないかな`; state.storyStep = 2; }
+    else if(stepKey === 'step2_3') { res.text = `うるさいな〜笑 とにかくもう好きじゃないから別れて`; state.storyStep = 2; }
+    else if(stepKey === 'step3') { res.text = `じゃあ${AFP}への気持ち、今すぐ形で見せてよ。\n今からその人と、ずっと行きたかった高級なお店でディナーするんだけど、そのZ${UN}くんが払いなよ。\nそれができたら、ブロックするの少しだけ待ってあげてもいいよ？`; state.storyStep = 3; }
+    else if(stepKey === 'branch_refusal') { res.text = "じゃあもう二度と会えないね〜ばいばい笑"; state.storyStep = 3.5; }
+    else if(stepKey === 'branch_accept') { res.text = "とりあえず10000Zもらおうかな"; state.storyStep = 4; }
+    else if(stepKey === 'payment_done') { res.text = `Zはありがとうだけど${UN}くんには残念な報告するね。\nちょうど今目の前で${BN}くんから告白されて、付き合うことになったんだよね〜\nだから${UN}くんは${AFP}のATM兼奴隷として使ってあげる笑\nいいよね？`; state.storyStep = 5; }
+    else if(stepKey === 'step5_1') { res.text = `そだよ。${UN}くんよりイケメンでかっこいいの！`; state.storyStep = 5.1; }
+    else if(stepKey === 'step5_1_1') { res.text = `で、奴隷になるの？ならないの？どっち？`; state.storyStep = 5.3; }
+    else if(stepKey === 'step5_2') { res.text = `${AN}のためにZを貢いだり、アッシーとして使われるの。幸せでしょ？`; state.storyStep = 5.3; }
+    else if(stepKey === 'step5_heart_2') { res.text = `今決めて。断ったらもう二度と仲良くしてあげないけど。`; state.storyStep = 5.4; }
+    else if(stepKey === 'step6') { res.text = "おっけー\nじゃあ、彼氏も入れた3人のグループライン作るね。"; state.storyStep = 6; }
+
+    // Group
+    else if(stepKey === 'g_step1') { res.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AN}のこと幸せにしてくれるんだから笑`; state.storyStep = 8; }
+    else if(stepKey === 'g_step1_alt') {
+        res.text = `「かしこまりました」ね？敬語ちゃんと使いなよ笑`;
+        state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
+        setTimeout(() => {
+            showTyping(currentRoom, () => {
+                let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+                res2.text = `まず彼氏に挨拶しな？${UN}くんの代わりに${AN}のこと幸せにしてくれるんだから笑`;
+                state.storyStep = 8;
+                state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); 
+                isProcessing = false; save(); checkUIState();
+            });
+        }, 1500);
+        return;
+    }
+    else if(stepKey === 'g_step2') { res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = "よろしくな元カレくんw たくさんこき使ってやるよw 返事は？"; state.storyStep = 9; }
+    else if(stepKey === 'g_branch_refusal') { 
+        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = "は？"; 
+        state.storyStep = 10;
+        state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
+        setTimeout(() => {
+            showTyping(currentRoom, () => {
+                let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+                res2.text = `まあまあ、${BN}くん。${UN}は${AFP}の言うことなら何でも聞くから♡\nね、${UN}？ 試しに、反抗的な態度とったこと${BN}くんに謝ってくれる？`;
+                state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); 
+                isProcessing = false; save(); checkUIState();
+            });
+        }, 1500);
+        return; 
+    }
+    else if(stepKey === 'g_branch_accept' || stepKey === 'g_branch_accept2') { 
+        if (stepKey === 'g_branch_accept2') {
+            res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = "これからよろしく頼むよ、奴隷くんw";
+            state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
+            setTimeout(() => {
+                showTyping(currentRoom, () => {
+                    let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+                    res2.text = `${AFP}の命令だけじゃなくて、${BN}くんの言うこともちゃんと聞くんだよ？笑`;
+                    state.storyStep = 11;
+                    state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); 
+                    isProcessing = false; save(); checkUIState();
+                });
+            }, 1500);
+            return;
+        } else {
+            res.text = `${AFP}の命令だけじゃなくて、${BN}くんの言うこともちゃんと聞くんだよ？笑`; 
+            state.storyStep = 11;
+        }
+    }
+    else if(stepKey === 'g_step4') { res.text = `さっそく${AN}たちに貢いでよ笑 ATMになったんでしょ？`; state.storyStep = 12; }
+    else if(stepKey === 'g_step5') { res.text = `5000Zでいいよ笑`; state.storyStep = 13; }
+    else if(stepKey === 'g_payment_done') {
+        res.text = `ありがと〜♡ だいすきだよ♡ ATMとして笑`;
+        state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
+        setTimeout(() => {
+            showTyping(currentRoom, () => {
+                let res2 = { role:'bf', name:state.names.bf, icon:state.bfIcon, time:getTime() };
+                res2.text = `便利な元カレで助かるわw`;
+                state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); save();
+                
+                setTimeout(() => {
+                    showTyping(currentRoom, () => {
+                        let res3 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+                        res3.text = `ねね、${UN}くんのZなにに使われるか分かる？`;
+                        state.storyStep = 14;
+                        state.messages[currentRoom].push(res3); render(); triggerEffects(res3.name, res3.text, false); 
+                        isProcessing = false; save(); checkUIState();
+                    });
+                }, 1500);
+            });
+        }, 1500);
+        return;
+    }
+    else if(stepKey === 'g_step6_1') { res.text = `教えてあげるね笑 ${AN}と${BN}くんのデート代だよ笑`; state.storyStep = 15; }
+    else if(stepKey === 'g_step6_2') { res.text = `せいかーい笑 よくわかってんじゃん、${UN}くんの言う通りだよ笑`; state.storyStep = 15; }
+    else if(stepKey === 'g_step6_3') { res.text = `知りたくないか〜笑 でもデートで使われちゃうってちゃんと受け止めないとだよ`; state.storyStep = 15; }
+    else if(stepKey === 'g_step7_1') { res.text = `たくさん悔しがりな笑`; state.storyStep = 16; }
+    else if(stepKey === 'g_step7_2') { res.text = `また貢いでもらうからそれまでに稼いどいてね`; state.storyStep = 16; }
+    else if(stepKey === 'g_step7_3') { res.text = `言われなくても使ってあげるから安心しな`; state.storyStep = 16; }
+    else if(stepKey === 'g_step8') {
+        res.role = 'bf'; res.name = state.names.bf; res.icon = state.bfIcon; res.text = `じゃあこれからお泊まりだからじゃあなw`;
+        state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false); save();
+        setTimeout(() => {
+            showTyping(currentRoom, () => {
+                let res2 = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+                res2.text = `${UN}くんはせいぜい想像しててー笑`;
+                state.messages[currentRoom].push(res2); render(); triggerEffects(res2.name, res2.text, false); save();
+                
+                setTimeout(() => {
+                    showTyping(currentRoom, () => {
+                        let res3 = { role:'bf', name:state.names.bf, icon:state.bfIcon, time:getTime() };
+                        res3.text = `また気が向いたら連絡してやるよ`;
+                        state.storyStep = 17; 
+                        state.messages[currentRoom].push(res3); render(); triggerEffects(res3.name, res3.text, false); 
+                        isProcessing = false; save(); checkUIState();
+                    });
+                }, 1500);
+            });
+        }, 1500);
+        return;
+    }
+
+    else if(currentRoom === 'bf') { res.name = state.names.bf; res.role = 'bf'; res.icon = state.bfIcon; res.text = `直接LINEしてくんな。用があるならグループで言えやｗ`; }
+    else { res.text = "返事遅いんだけど？"; }
+
+    state.messages[currentRoom].push(res); render(); triggerEffects(res.name, res.text, false);
+    isProcessing = false; updateSidebarDisplay(); save(); checkUIState();
+    
+    if(stepKey === 'step6') { setTimeout(() => { state.isInvited = true; updateSidebarDisplay(); triggerEffects("システム", "招待されました", true); save(); }, 1500); }
+  });
+}
+
+sendBtn.onclick = () => { 
+  const val = input.value; if(!val || isProcessing) return; 
+  if (isAutoMode) isProcessing = true; 
+  const time = getTime();
+  state.messages[currentRoom].push({ role:'user', name:state.names.user, text:val, time:time }); 
+  input.value = ""; render(); updateSidebarDisplay(); save(); 
+  
+  if (isAutoMode) {
+      if (currentRoom === 'hina') {
+          if (state.storyStep === 4) {
+              isProcessing = false; 
+          } else {
+              aiReply('normal');
+          }
+      }
+  }
+};
+
+function updateSidebarDisplay() { 
+  document.getElementById("display-ai-name").innerText = state.names.ai; 
+  document.getElementById("list-icon-hina").src = state.aiIcon; 
+  document.getElementById("display-bf-name").innerText = state.names.bf; 
+  document.getElementById("list-icon-bf").src = state.bfIcon; 
+  
+  if(state.isInvited) { 
+    document.getElementById('list-group').classList.remove('hidden'); 
+    document.getElementById("stack-icon-ai").src = state.aiIcon; 
+    document.getElementById("stack-icon-bf").src = state.bfIcon; 
+  } 
+  if(state.isBfUnlocked) { 
+    document.getElementById('list-bf').classList.remove('hidden'); 
+  } 
+  
+  ['hina', 'group', 'bf'].forEach(id => { 
+    const msgs = state.messages[id]; 
+    if (msgs && msgs.length > 0) { 
+      let prevText = msgs[msgs.length - 1].isPayment ? "Zをプレゼントしました" : msgs[msgs.length - 1].text; 
+      document.getElementById(`list-preview-${id}`).innerText = prevText; 
+      document.getElementById(`list-time-${id}`).innerText = msgs[msgs.length - 1].time; 
+    } 
+    const badge = document.getElementById(`badge-${id}`); 
+    if (state.unread[id] > 0) { 
+      badge.innerText = state.unread[id]; 
+      badge.style.display = 'flex'; 
+    } else { 
+      badge.style.display = 'none'; 
+    } 
+  }); 
+}
+
+</script>
+
+</body>
+</html>
