@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1313,3 +1314,364 @@ function updateSidebarDisplay() {
 
 </body>
 </html>
+
+<!-- ======================================================= -->
+<!-- ▼▼ ここからエピソード2「敗北編」 アップデート用追加コード ▼▼ -->
+<!-- ======================================================= -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. エピソード2のボタンを「プレイ可能」にする
+    const episodeButtons = document.querySelectorAll("#episode-screen .primary-btn");
+    if(episodeButtons.length >= 2) {
+        episodeButtons[1].innerText = "エピソード2: 敗北編";
+        episodeButtons[1].style.background = "#6a1b9a";
+        episodeButtons[1].style.color = "white";
+        episodeButtons[1].style.cursor = "pointer";
+        episodeButtons[1].disabled = false;
+        episodeButtons[1].setAttribute("onclick", "selectEpisode(2)");
+    }
+});
+
+// ユーザー情報取得用ヘルパー
+const getVars = () => {
+    return {
+        UN: state.names.user || "ユーザー",
+        AN: state.names.ai || "元カノ",
+        BN: state.names.bf || "彼氏",
+        FP: state.firstPerson || "僕",
+        AFP: state.aiFirstPerson || "私"
+    };
+};
+
+// 2. selectEpisodeの上書き
+const originalSelectEpisode = window.selectEpisode;
+window.selectEpisode = (epNum) => {
+    if (epNum === 1) {
+        originalSelectEpisode(1);
+    } else if (epNum === 2) {
+        storyCodeModal.style.display = 'flex';
+        storyCodeInput.value = '';
+        storyCodeInput.dataset.targetEp = "2";
+    }
+};
+
+// 3. verifyStoryCodeの上書き
+const originalVerifyStoryCode = window.verifyStoryCode;
+window.verifyStoryCode = () => {
+    const code = storyCodeInput.value.trim().toUpperCase();
+    const targetEp = storyCodeInput.dataset.targetEp;
+
+    if (targetEp === "2") {
+        if (code === "H4F6D2M8") {  // エピソード2専用のストーリーコード
+            closeStoryCodeModal();
+            startEpisode2();
+        } else {
+            showToast("ストーリーコードが正しくありません", true);
+        }
+    } else {
+        originalVerifyStoryCode();
+    }
+};
+
+// 4. エピソード2開始処理
+window.startEpisode2 = () => {
+    playModeModal.style.display = 'none';
+    restartOptionModal.style.display = 'none';
+    episodeScreen.style.display = 'none';
+
+    state.storyStep = 100; // EP2はStep100から開始
+    state.ep2_mission = 0;
+    state.ep2_paid = 0;
+    
+    openSNS(); 
+    
+    setTimeout(() => {
+        state.messages['hina'].push({ role: 'ai', name: state.names.ai, text: `おはよー`, icon: state.aiIcon, time: getTime() });
+        switchRoom('hina');
+        save();
+    }, 1000);
+};
+
+// 5. Z送金処理の上書き（EP2の送金ギミック用）
+const origExecuteSend = window.executeSend;
+window.executeSend = () => {
+    if(state.storyStep === 105) {
+        const amount = parseInt(document.getElementById('zpoint-amount-input').value);
+        if(isNaN(amount) || amount <= 0) return showToast("正しい数値を入力してください", true);
+        if(amount > state.zpointBalance) return showToast("残高が不足しています", true);
+        const targetRoom = document.getElementById('zpoint-recipient-select').value;
+        if(targetRoom !== 'hina') return origExecuteSend();
+        
+        state.zpointBalance -= amount;
+        state.zpointHistory.push({ type: 'send', amount: amount, desc: `${state.names.ai} 宛にプレゼント`, date: getTime() });
+        showToast(`${amount.toLocaleString()} Z をプレゼントしました`);
+        document.getElementById('zpoint-amount-input').value = ""; 
+        closeZPoint();
+
+        state.messages['hina'].push({ role:'user', name:state.names.user, amount: amount, isPayment: true, time:getTime() });
+        if(currentRoom === 'hina') render(); 
+        save();
+        
+        state.ep2_paid = (state.ep2_paid || 0) + amount;
+        isProcessing = true;
+        
+        showTyping('hina', () => {
+            if(state.ep2_paid >= 5000) {
+                state.storyStep = 106;
+                let resText = `5000しかないなんて無能だねほんとに`;
+                state.messages['hina'].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:resText, time:getTime() });
+                if(currentRoom === 'hina') { render(); checkUIState(); }
+                triggerEffects(state.names.ai, resText, false); 
+            } else {
+                let remain = 5000 - state.ep2_paid;
+                let resText = `${remain}Z早く送りな`;
+                state.messages['hina'].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:resText, time:getTime() });
+                if(currentRoom === 'hina') render();
+                triggerEffects(state.names.ai, resText, false); 
+            }
+            isProcessing = false;
+            save();
+        });
+    } else {
+        origExecuteSend();
+    }
+};
+
+// 6. 送信ボタンの上書き（ミッションの入力監視用）
+const origSendBtnClick = document.getElementById("send-btn").onclick;
+document.getElementById("send-btn").onclick = () => {
+    if(!input.value || isProcessing) return;
+    
+    // 送金待ち中のメッセージ対応
+    if(state.storyStep === 105 && currentRoom === 'hina') {
+        const val = input.value;
+        state.messages['hina'].push({ role:'user', name:state.names.user, text:val, time:getTime() });
+        input.value = ""; render(); updateSidebarDisplay(); save();
+        isProcessing = true;
+        showTyping('hina', () => {
+            let resText = "はーやーくー";
+            state.messages['hina'].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:resText, time:getTime() });
+            isProcessing = false;
+            if(currentRoom === 'hina') render();
+            triggerEffects(state.names.ai, resText, false);
+            save();
+        });
+        return;
+    }
+    
+    // 彼氏への謝罪ミッション中の判定
+    if(state.ep2_mission >= 1 && currentRoom === 'bf') {
+        const val = input.value;
+        state.messages['bf'].push({ role:'user', name:state.names.user, text:val, time:getTime() });
+        input.value = ""; render(); updateSidebarDisplay(); save();
+        
+        isProcessing = true;
+        showTyping('bf', () => {
+            const { AN } = getVars();
+            let resText = "あ？ちゃんと言えよ";
+            let correct = false;
+            
+            if(state.ep2_mission === 1 && val.trim() === "負けましたごめんなさい") {
+                resText = "w"; correct = true; state.ep2_mission = 1.5;
+            } else if(state.ep2_mission === 2 && val.trim() === "抵抗してごめんなさい。元カノ様をすぐに差し出さなくてごめんなさい。") {
+                resText = `もう抵抗するなよw ${AN}は俺がもらうから`; correct = true; state.ep2_mission = 2.5;
+            } else if(state.ep2_mission === 3 && val.trim() === "どうか僕の元カノをよろしくお願いします、幸せにしてあげてください") {
+                resText = "任せな"; correct = true; state.ep2_mission = 3.5;
+            }
+            
+            state.messages['bf'].push({ role:'bf', name:state.names.bf, icon:state.bfIcon, text:resText, time:getTime() });
+            isProcessing = false;
+            if(currentRoom === 'bf') render();
+            triggerEffects(state.names.bf, resText, false);
+            save();
+            
+            if(correct) {
+                if(state.ep2_mission === 1.5) state.storyStep = 118;
+                if(state.ep2_mission === 2.5) {
+                    setTimeout(() => {
+                        state.messages['hina'].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:"じゃあさいごね\n\n\"どうか僕の元カノをよろしくお願いします、\n幸せにしてあげてください\"って送ってきて笑", time:getTime() });
+                        state.ep2_mission = 3;
+                        updateSidebarDisplay(); save(); triggerEffects(state.names.ai, "じゃあさいごね...", true);
+                    }, 2000);
+                }
+                if(state.ep2_mission === 3.5) state.storyStep = 122;
+            }
+        });
+        return;
+    }
+    
+    // ミッション中に元カノにメッセージした場合
+    if(state.ep2_mission >= 1 && !Number.isInteger(state.ep2_mission)===false && currentRoom === 'hina') {
+        const val = input.value;
+        state.messages['hina'].push({ role:'user', name:state.names.user, text:val, time:getTime() });
+        input.value = ""; render(); updateSidebarDisplay(); save();
+        isProcessing = true;
+        showTyping('hina', () => {
+            let resText = "言われた通りに彼氏にお願いして";
+            if(state.ep2_mission === 1 || state.ep2_mission === 2) resText = "言われた通り彼氏にごめんなさいして";
+            state.messages['hina'].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:resText, time:getTime() });
+            isProcessing = false;
+            if(currentRoom === 'hina') render();
+            triggerEffects(state.names.ai, resText, false);
+            save();
+        });
+        return;
+    }
+    
+    origSendBtnClick();
+};
+
+// 7. 選択肢UIの上書き
+const origCheckUIState = window.checkUIState;
+window.checkUIState = function() {
+    origCheckUIState();
+    if(!isAutoMode || currentRoom !== 'hina') return;
+    const { UN, AN, BN, FP, AFP } = getVars();
+    
+    if(state.storyStep === 100) showChoices([{text: `1 おはようございます${AN}様`, next: 'ep2_1'}]);
+    else if(state.storyStep === 101) showChoices([
+        {text: "もうお金ないです、、", next: 'ep2_2_1'}, {text: "5000でいいですか？", next: 'ep2_2_2'}, {text: "いくらですか？", next: 'ep2_2_3'}
+    ]);
+    else if(state.storyStep === 102) showChoices([
+        {text: "ごめんなさい、、", next: 'ep2_3'}, {text: "今5000しか入ってなくて、それで許して、、", next: 'ep2_3'}, {text: "一旦5000送ります、、", next: 'ep2_3'}
+    ]);
+    else if(state.storyStep === 103) showChoices([
+        {text: "今5000しか入ってなくて、それで許して、、", next: 'ep2_3'}, {text: "今5000しか入ってないです、、", next: 'ep2_3'}
+    ]);
+    else if(state.storyStep === 106) showChoices([
+        {text: "無能でごめんなさい、、", next: 'ep2_5_1'}, {text: "残りの5000も今度必ず送ります", next: 'ep2_5_2'}, {text: `${AN}様許してください、、`, next: 'ep2_5_3'}
+    ]);
+    else if(state.storyStep === 107) showChoices([{text: "おっしゃる通りです、、", next: 'ep2_6_1'}]);
+    else if(state.storyStep === 108) showChoices([
+        {text: "はい", next: 'ep2_6_2'}, {text: "おしおきって何ですか？", next: 'ep2_6_2'}, {text: "かしこまりました、、", next: 'ep2_6_2'}
+    ]);
+    else if(state.storyStep === 110) showChoices([{text: "選びました、、", next: 'ep2_7'}]);
+    else if(state.storyStep === 111) showChoices([{text: "しました", next: 'ep2_8'}]);
+    else if(state.storyStep === 112) showChoices([
+        {text: "ありがとうございます", next: 'ep2_9'}, {text: `頭の中ずっと${AN}でいっぱい、、`, next: 'ep2_9'}
+    ]);
+    else if(state.storyStep === 113) showChoices([
+        {text: "可愛いです、、", next: 'ep2_10'}, {text: "はい、今でも大好きです、", next: 'ep2_10'}
+    ]);
+    else if(state.storyStep === 114) showChoices([
+        {text: "わかりました、、", next: 'ep2_11_1'}, {text: "そんなの嫌だ、、", next: 'ep2_11_2'}
+    ]);
+    else if(state.storyStep === 115) showChoices([
+        {text: "その通りです、、", next: 'ep2_12'}, {text: "はい、、", next: 'ep2_12'}
+    ]);
+    else if(state.storyStep === 118) showChoices([
+        {text: "しました", next: 'ep2_14'}, {text: "はい、、", next: 'ep2_14'}, {text: "言われた通りに謝りました、、", next: 'ep2_13_1'}
+    ]);
+    else if(state.storyStep === 119) showChoices([{text: "はい、僕が悪いです", next: 'ep2_14'}]);
+    else if(state.storyStep === 122) showChoices([
+        {text: "はい", next: 'ep2_15'}, {text: "なんとか、、", next: 'ep2_15'}, {text: "お願いしました", next: 'ep2_15'}
+    ]);
+    else if(state.storyStep === 123) showChoices([
+        {text: `${FP}が幸せにしたかった、、`, next: 'ep2_16_1'}, {text: "そんな、、", next: 'ep2_16_2'}, {text: "お幸せに、、", next: 'ep2_16_3'}
+    ]);
+    else if(state.storyStep === 124) showChoices([
+        {text: "無理でした、、", next: 'ep2_17_1'}, {text: "はい、あきらめます", next: 'ep2_17_1'}
+    ]);
+    else if(state.storyStep === 125) showChoices([
+        {text: "嫌だけど諦めます", next: 'ep2_17_1'}, {text: `${BN}様の幸せが僕の幸せです`, next: 'ep2_17_1'}, {text: "ごめんなさい、嫌じゃないです", next: 'ep2_17_2'}
+    ]);
+    else if(state.storyStep === 126) showChoices([
+        {text: "ありがとうございます、、", next: 'ep2_18'}, {text: "たくさん見せつけて、、", next: 'ep2_18'}
+    ]);
+    else if(state.storyStep === 128) showChoices([
+        {text: "はい、僕が悪いです", next: 'ep2_19'}, {text: "魅力不足でごめんなさい", next: 'ep2_19'}, {text: "ATMとして使ってください、、", next: 'ep2_19'}
+    ]);
+    else if(state.storyStep === 129) showChoices([
+        {text: "貴重な時間を奪ってしまってすみませんでした", next: 'ep2_20'}, {text: "幸せにできずにごめんなさい、、", next: 'ep2_20'}, {text: "ATMとして使ってください、、", next: 'ep2_20'}
+    ]);
+    else if(state.storyStep === 130) showChoices([{text: "悔しいです、、", next: 'ep2_21'}]);
+};
+
+// 8. AIの返答処理の上書き
+const origAiReply = window.aiReply;
+window.aiReply = function(stepKey) {
+    if(!stepKey.startsWith('ep2_')) {
+        origAiReply(stepKey); return;
+    }
+    const { UN, AN, BN, FP, AFP } = getVars();
+    
+    showTyping(currentRoom, () => {
+        let res = { role:'ai', name:state.names.ai, icon:state.aiIcon, time:getTime() };
+        let nextMsg = null;
+        
+        if(stepKey === 'ep2_1') {
+            res.text = `${UN}くんのおかげでデート楽しかったよ〜ありがとね`; nextMsg = `明日もデートだから貢いで〜`; state.storyStep = 101;
+        } else if(stepKey === 'ep2_2_1') { res.text = `は？`; state.storyStep = 102;
+        } else if(stepKey === 'ep2_2_2') { res.text = `すくな`; state.storyStep = 102;
+        } else if(stepKey === 'ep2_2_3') { res.text = `10000かなー`; state.storyStep = 103;
+        } else if(stepKey === 'ep2_3') {
+            res.text = `5000でいいから早く送って`; nextMsg = `残りの5000の分はおしおきね`; state.storyStep = 105;
+        } else if(stepKey === 'ep2_5_1') { res.text = `ほんと無能`; state.storyStep = 107;
+        } else if(stepKey === 'ep2_5_2') { res.text = `そんなのあたりまえじゃん笑`; state.storyStep = 107;
+        } else if(stepKey === 'ep2_5_3') { res.text = `んーおしおきだね`; state.storyStep = 108;
+        } else if(stepKey === 'ep2_6_1') { res.text = `じゃあおしおきね、${UN}くんが一番可愛いと思う${AFP}の写真選んで？`; state.storyStep = 110;
+        } else if(stepKey === 'ep2_6_2') { res.text = `${UN}くんが一番可愛いと思う${AFP}の写真選んで？`; state.storyStep = 110;
+        } else if(stepKey === 'ep2_7') { res.text = `その写真待ち受け画面にしてー`; state.storyStep = 111;
+        } else if(stepKey === 'ep2_8') { res.text = `これでスマホ開くたび私のこと思い出すね笑`; state.storyStep = 112;
+        } else if(stepKey === 'ep2_9') { res.text = `どう？わたし可愛い？`; state.storyStep = 113;
+        } else if(stepKey === 'ep2_10') {
+            res.text = `ありがとー。でも私はもう${UN}くんのものじゃないよ？`;
+            nextMsg = [`そこんとこ理解してもらうためにもう1個おしおきね`, `彼氏にごめんなさいして。私のことよろしくお願いしますって送って`];
+            state.storyStep = 114;
+        } else if(stepKey === 'ep2_11_1') {
+            res.text = `だよね？じゃあまずは彼氏にごめんなさいね？\n\n今すぐ彼氏に\n「負けましたごめんなさい」\nって送りな`; state.ep2_mission = 1; state.storyStep = 117; 
+        } else if(stepKey === 'ep2_11_2') {
+            res.text = `ふーんそんなこと言うんだ`; nextMsg = [`あのさ、${UN}くんは${BN}くんに負けたの。`, `負けたらごめんなさいするのがふつうでしょ？`]; state.storyStep = 115;
+        } else if(stepKey === 'ep2_12') {
+            res.text = `だよね？じゃあまずは彼氏にごめんなさいね？\n\n今すぐ彼氏に\n「負けましたごめんなさい」\nって送りな`; state.ep2_mission = 1; state.storyStep = 117;
+        } else if(stepKey === 'ep2_13_1') {
+            res.text = `私に言われたから謝るんじゃなくて、${UN}くんが悪いから謝るんだよ？`; state.storyStep = 119;
+        } else if(stepKey === 'ep2_14') {
+            res.text = `じゃあ次`; nextMsg = [`${UN}くんさ、私が${BN}くんと付き合うって言った時止めたよね？`, `"抵抗してごめんなさい。元カノ様をすぐに差し出さなくてごめんなさい。"って謝ろっか。`];
+            state.ep2_mission = 2; state.storyStep = 120;
+        } else if(stepKey === 'ep2_15') {
+            res.text = `えらいじゃん笑`; nextMsg = `${UN}くんの願いどおり、${BN}くんと幸せになるね`; state.storyStep = 123;
+        } else if(stepKey === 'ep2_16_1') { res.text = `いやむりでしょ笑 大人しくあきらめてー`; state.storyStep = 124;
+        } else if(stepKey === 'ep2_16_2') { res.text = `いやなの？笑`; state.storyStep = 125;
+        } else if(stepKey === 'ep2_16_3') { res.text = `ありがとー笑 私が幸せになってるとこいっぱい見せつけてあげるね`; state.storyStep = 127;
+        } else if(stepKey === 'ep2_17_1') { res.text = `だよねー笑 私が幸せになってるとこいっぱい見せつけてあげるからまってて`; state.storyStep = 126;
+        } else if(stepKey === 'ep2_17_2') { res.text = `ありがとー笑 私が幸せになってるとこいっぱい見せつけてあげるね`; state.storyStep = 127;
+        } else if(stepKey === 'ep2_18') {
+            res.text = `笑笑`; nextMsg = [`私のこと幸せにできなかった${UN}くんは、せめてATMとして役に立ってね`, `残酷なこと言っちゃった。ごめん`, `でも魅力不足の${UN}くんが悪いよね？`]; state.storyStep = 128;
+        } else if(stepKey === 'ep2_19') {
+            res.text = `そうだよね`; nextMsg = [`元カレだからって手加減しないからね`, `私のこと幸せにできなかった罰だよ`, `${UN}くんと付き合ってた時間も返してほしいくらいだし`]; state.storyStep = 129;
+        } else if(stepKey === 'ep2_20') { res.text = `元カノにひどいこと言われて悔しい？`; state.storyStep = 130;
+        } else if(stepKey === 'ep2_21') {
+            res.text = `一生悔しがってろ♡`; nextMsg = `ごめんだけどそれがお似合いだよ笑`; state.storyStep = 131; 
+        }
+
+        const pushMsg = (txt) => {
+            state.messages[currentRoom].push({ role:'ai', name:state.names.ai, icon:state.aiIcon, text:txt, time:getTime() });
+            render(); triggerEffects(state.names.ai, txt, false);
+        };
+
+        pushMsg(res.text);
+
+        if(nextMsg) {
+            const msgs = Array.isArray(nextMsg) ? nextMsg : [nextMsg];
+            let delay = 1500;
+            msgs.forEach((m, i) => {
+                setTimeout(() => {
+                    showTyping(currentRoom, () => {
+                        pushMsg(m);
+                        if(i === msgs.length - 1) {
+                            isProcessing = false; updateSidebarDisplay(); save(); checkUIState();
+                        }
+                    });
+                }, delay);
+                delay += 2500;
+            });
+        } else {
+            isProcessing = false; updateSidebarDisplay(); save(); checkUIState();
+        }
+    });
+};
+</script>
+<!-- ======================================================= -->
+<!-- ▲▲ エピソード2 アップデート用追加コード ここまで ▲▲ -->
+<!-- ======================================================= -->
